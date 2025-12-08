@@ -1,7 +1,7 @@
 // app/components/TumorDetector.tsx
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 type PredictionResult = {
   label: string;
@@ -44,7 +44,7 @@ const TumorDetector = () => {
 
     try {
       setLoading(true);
-      const res = await fetch("/api/predict", {
+      const res = await fetch("/api/analyze", {
         method: "POST",
         body: formData,
       });
@@ -64,7 +64,7 @@ const TumorDetector = () => {
   };
 
   return (
-    <div className="page-root" style={{minHeight: 'calc(100vh - 150px)'}}>
+    <div className="page-root" style={{ minHeight: "calc(100vh - 150px)" }}>
       <div className="glass-card">
         <header className="header">
           <div>
@@ -91,7 +91,8 @@ const TumorDetector = () => {
                 <div className="upload-icon">🧠</div>
                 <p className="upload-title">Upload MRI Otak</p>
                 <p className="upload-text">
-                  Klik di sini atau seret &amp; jatuhkan gambar (.png, .jpg, .jpeg)
+                  Klik di sini atau seret &amp; jatuhkan gambar (.png, .jpg,
+                  .jpeg)
                 </p>
                 {file && (
                   <p className="upload-file-name">
