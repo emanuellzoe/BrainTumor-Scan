@@ -7,7 +7,6 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 # --- SETUP PATH ---
-# Menambahkan folder saat ini ke path sistem agar modul bisa dibaca
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(BASE_DIR)
 
@@ -15,11 +14,9 @@ from modules.preprocessing import ManualPreprocessor
 from modules.features import ManualFeatures
 from modules.pca import ManualPCA
 
-# --- SETUP APP ---
 app = Flask(__name__)
 CORS(app)
 
-# Inisialisasi Tools
 preprocessor = ManualPreprocessor()
 extractor = ManualFeatures()
 
@@ -37,7 +34,7 @@ pca = None
 # --- LOAD MODEL SAAT STARTUP ---
 print(f"[INFO] Backend Start di: {BASE_DIR}")
 
-# Cek Model
+# 1. Cek Model
 if os.path.exists(FILE_LIBRARY):
     print(f">> Load Model Library: {FILE_LIBRARY}")
     with open(FILE_LIBRARY, 'rb') as f:
@@ -49,7 +46,7 @@ elif os.path.exists(FILE_MANUAL):
 else:
     print("[WARN] Belum ada model! Jalankan 'python ML/train_smart.py' dulu.")
 
-# --- INI KODE LAMA SCALER (JANGAN DIUBAH) ---
+# 2. Cek Scaler
 if os.path.exists(FILE_SCALER):
     print(f">> Load Scaler: {FILE_SCALER}")
     with open(FILE_SCALER, 'rb') as f:
@@ -57,7 +54,7 @@ if os.path.exists(FILE_SCALER):
 else:
     print("[WARN] Scaler tidak ditemukan.")
 
-# --- MASUKKAN KODE PCA DI SINI (SETELAH ELSE SCALER SELESAI) ---
+# 3. Cek PCA
 if os.path.exists(FILE_PCA):
     print(f">> Load PCA: {FILE_PCA}")
     with open(FILE_PCA, 'rb') as f:
@@ -80,7 +77,7 @@ def analyze():
         if img is None:
             return jsonify({'error': 'Invalid image format'}), 400
 
-        # 2. Preprocessing & Ekstraksi (Sama persis dengan Training)
+        # 2. Preprocessing & Ekstraksi
         gray = preprocessor.to_grayscale_manual(img)
         kernel = preprocessor.gaussian_kernel_manual()
         blurred = preprocessor.convolution_manual(gray, kernel)
@@ -95,24 +92,25 @@ def analyze():
         confidence = 0.0
         
         if svm_model and scaler:
-            # Gabung fitur & Scaling
+            # A. Gabung fitur
             features = np.hstack([glcm, hog]).reshape(1, -1)
-            features = np.hstack([glcm, hog]).reshape(1, -1)
-            features = scaler.transform(features)
+            
+            # B. Scaling (CUKUP SATU KALI!)
             features = scaler.transform(features)
             
+            # C. PCA Transform (Jika ada)
             if pca:
                 features = pca.transform(features)
 
-            # Predict Class
+            # D. Prediksi
             pred_idx = int(svm_model.predict(features)[0])
             
-            # Predict Confidence (Jika support probability)
+            # E. Confidence
             if hasattr(svm_model, "predict_proba"):
                 probs = svm_model.predict_proba(features)[0]
-                confidence = float(probs[pred_idx]) # 0.0 - 1.0
+                confidence = float(probs[pred_idx])
             else:
-                confidence = 1.0 # Default jika manual SVM
+                confidence = 1.0 
             
             if 0 <= pred_idx < len(CATEGORIES):
                 label = CATEGORIES[pred_idx]
@@ -121,7 +119,7 @@ def analyze():
         return jsonify({
             'status': 'success',
             'label': label,
-            'confidence': confidence, # Frontend mengharapkan float 0-1
+            'confidence': confidence,
             'features': {
                 'glcm_contrast': float(glcm[0]),
                 'hog_len': len(hog)
