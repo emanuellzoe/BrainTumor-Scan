@@ -1,36 +1,140 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+🧠 Brain-Scan
 
-## Getting Started
+Brain-Scan adalah proyek berbasis Machine Learning + Web UI (Next.js) yang bertujuan untuk
+menganalisis citra brain scan dan menampilkan hasil klasifikasinya secara visual dan interaktif.
 
-First, run the development server:
+Proyek ini dapat digunakan sebagai fondasi sistem:
 
-```bash
+✔️ pendeteksi kondisi otak,
+✔️ dashboard analisis neuro-data,
+✔️ demonstrasi AI untuk kesehatan,
+✔️ eksperimen riset computer vision & neuroscience.
+
+📌 Fitur Utama
+
+✨ Upload brain scan / image input
+Pengguna dapat memasukkan data scan otak untuk dianalisis.
+
+🤖 Model AI / Machine Learning Classification
+Backend melakukan klasifikasi kondisi otak berdasarkan data input.
+
+📊 Visualisasi UI
+Frontend menampilkan hasil analisis dalam desain warna oranye yang intuitif dan modern.
+
+🔗 Integrasi API
+Frontend terhubung ke backend ML multi-service untuk inferensi dan pengiriman hasil analisis.
+
+🏗️ Arsitektur Sistem
++--------------+       +-------------+       +----------------+
+|  Frontend UI |  -->  |  API Layer  |  -->  |  ML Classifier |
+|   Next.js    |       |  REST API   |       |   Python/AI    |
++--------------+       +-------------+       +----------------+
+       |
+       v
++---------------+
+|  Visualization |
+|  Result Panel  |
++---------------+
+
+🛠️ Teknologi yang Digunakan
+🔹 Frontend
+
+Next.js
+
+React
+
+TailwindCSS (tema oranye UI)
+
+🔹 Backend / Machine Learning
+
+Python
+
+TensorFlow / PyTorch (contoh model ML)
+
+OpenCV (preprocessing gambar)
+
+NumPy / Pandas (data handling)
+
+🔹 DevTools / Infrastruktur
+
+GitHub
+
+REST API
+
+Model inference runner
+
+Catatan: Tools dapat berbeda sesuai implementasi di repositori kamu — README ini dapat disesuaikan jika struktur final berbeda.
+
+📂 Struktur Folder (Direkomendasikan)
+/brain-scan
+ ├─ frontend/          # Next.js UI
+ ├─ backend/           # Python ML model + API service
+ ├─ dataset/           # Sample brain scan images (optional)
+ ├─ docs/              # Documentation / presentation
+ └─ README.md
+
+🚀 Cara Instalasi & Menjalankan
+1️⃣ Clone repository
+git clone https://github.com/emanuellzoe/brain-scan.git
+cd brain-scan
+
+2️⃣ Menjalankan Backend (Python)
+cd backend
+pip install -r requirements.txt
+python app.py
+
+
+Backend akan berjalan pada:
+
+http://localhost:5000
+
+3️⃣ Menjalankan Frontend (Next.js)
+cd frontend
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+UI dapat diakses melalui:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+http://localhost:3000
 
-## Learn More
+📌 Cara Menggunakan
 
-To learn more about Next.js, take a look at the following resources:
+Jalankan backend inference model.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Buka UI (Next.js).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Upload gambar scan otak atau pilih sampel.
 
-## Deploy on Vercel
+Sistem akan memproses gambar dan menampilkan output klasifikasi serta confidence.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+🧩 Output Sistem
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+UI akan menampilkan:
+
+✔ Status klasifikasi (misalnya: Normal, Tumor, Abnormal Activity)
+✔ Confidence level model
+✔ Highlighting visual / warna tematik
+
+Tema tampilan menggunakan sentuhan warna oranye untuk menjaga UI lebih informatif dan menarik.
+
+📌 Pengembangan Selanjutnya
+
+Integrasi 3D MRI viewer
+
+Explainable AI panel (XAI heatmap)
+
+Dashboard monitoring (historical scan & patient management)
+
+🤝 Kontribusi
+
+Pull request sangat diterima!
+Silakan buat issue atau diskusi untuk fitur baru.
+
+🛡️ License
+
+📄 MIT License — bebas digunakan untuk riset, akademik, atau pengembangan lanjutan.
+
+Jika ingin kolaborasi, silakan kontak melalui GitHub repo ini.
+
+✨ Terima kasih telah menggunakan Brain-Scan!
