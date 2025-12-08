@@ -1,6 +1,6 @@
-# 🧠 Brain-Scan
+# 🧠 BrainTumor-Scan
 
-**Dokumentasi Proyek Analisis Citra Otak Berbasis Machine Learning**
+**Dokumentasi Proyek Analisis Citra Tumor Otak Berbasis Machine Learning**
 
 ---
 
