@@ -1,136 +1,135 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import cv2
-import numpy as np
-import pickle
 import os
 import sys
+import pickle
+import numpy as np
+import cv2
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 
-# --- KONFIGURASI PATH DINAMIS (PENTING) ---
-# Agar Python tahu posisi file ini ada di folder "ML"
+# --- SETUP PATH ---
+# Menambahkan folder saat ini ke path sistem agar modul bisa dibaca
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(BASE_DIR) # Pastikan folder ML terbaca sebagai modul
+sys.path.append(BASE_DIR)
 
-# Import modul dari folder yang sama
 from modules.preprocessing import ManualPreprocessor
 from modules.features import ManualFeatures
-from modules.model_manual import ManualMulticlassSVM 
+from modules.pca import ManualPCA
 
+# --- SETUP APP ---
 app = Flask(__name__)
 CORS(app)
 
+# Inisialisasi Tools
 preprocessor = ManualPreprocessor()
 extractor = ManualFeatures()
 
-# --- DIAGNOSIS PATH ---
-print("\n" + "="*40)
-print("       API DIAGNOSTIC (NEW STRUCTURE)")
-print("="*40)
-print(f"[INFO] Lokasi Script: {BASE_DIR}")
+# --- KONFIGURASI FILE ---
+FILE_LIBRARY = os.path.join(BASE_DIR, 'model_library.pkl')
+FILE_MANUAL = os.path.join(BASE_DIR, 'model_manual.pkl')
+FILE_SCALER = os.path.join(BASE_DIR, 'scaler.pkl')
+FILE_PCA = os.path.join(BASE_DIR, 'pca.pkl')
 
-# Tentukan lokasi file Model & Scaler secara Absolut
-# Jadi mau terminalnya di BRAIN-SCAN atau di ML, dia tetap ketemu
-file_manual = os.path.join(BASE_DIR, 'model_manual.pkl')
-file_library = os.path.join(BASE_DIR, 'model_library.pkl')
-file_scaler = os.path.join(BASE_DIR, 'scaler.pkl')
-
-has_manual = os.path.exists(file_manual)
-has_library = os.path.exists(file_library)
-has_scaler = os.path.exists(file_scaler)
-
-print(f"[CHECK] {os.path.basename(file_library)} : {'ADA' if has_library else 'TIDAK ADA'}")
-print(f"[CHECK] {os.path.basename(file_scaler)}          : {'ADA' if has_scaler else 'TIDAK ADA'}")
-
+CATEGORIES = ["Glioma", "Meningioma", "No Tumor", "Pituitary"]
 svm_model = None
 scaler = None
-CATEGORIES = ["Glioma", "Meningioma", "No Tumor", "Pituitary"]
+pca = None
 
-# Logika Load Model
-if has_manual:
-    print(f">> [SUCCESS] Memuat MODEL MANUAL...")
-    with open(file_manual, 'rb') as f:
+# --- LOAD MODEL SAAT STARTUP ---
+print(f"[INFO] Backend Start di: {BASE_DIR}")
+
+# Cek Model
+if os.path.exists(FILE_LIBRARY):
+    print(f">> Load Model Library: {FILE_LIBRARY}")
+    with open(FILE_LIBRARY, 'rb') as f:
         svm_model = pickle.load(f)
-elif has_library:
-    print(f">> [SUCCESS] Memuat MODEL LIBRARY...")
-    with open(file_library, 'rb') as f:
+elif os.path.exists(FILE_MANUAL):
+    print(f">> Load Model Manual: {FILE_MANUAL}")
+    with open(FILE_MANUAL, 'rb') as f:
         svm_model = pickle.load(f)
 else:
-    print(">> [CRITICAL] TIDAK ADA MODEL! Jalankan 'python ML/train_smart.py' dulu.")
+    print("[WARN] Belum ada model! Jalankan 'python ML/train_smart.py' dulu.")
 
-# Logika Load Scaler
-if has_scaler:
-    print(f">> [SUCCESS] Memuat SCALER...")
-    with open(file_scaler, 'rb') as f:
+# --- INI KODE LAMA SCALER (JANGAN DIUBAH) ---
+if os.path.exists(FILE_SCALER):
+    print(f">> Load Scaler: {FILE_SCALER}")
+    with open(FILE_SCALER, 'rb') as f:
         scaler = pickle.load(f)
 else:
-    print(">> [WARNING] Scaler tidak ditemukan.")
+    print("[WARN] Scaler tidak ditemukan.")
 
-print("="*40 + "\n")
+# --- MASUKKAN KODE PCA DI SINI (SETELAH ELSE SCALER SELESAI) ---
+if os.path.exists(FILE_PCA):
+    print(f">> Load PCA: {FILE_PCA}")
+    with open(FILE_PCA, 'rb') as f:
+        pca = pickle.load(f)
+else:
+    print("[WARN] PCA tidak ditemukan.")
 
+# --- ROUTES ---
 @app.route('/analyze', methods=['POST'])
 def analyze():
     if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
+        return jsonify({'error': 'No file uploaded'}), 400
     
-    file = request.files['file']
-    in_memory_file = file.read()
-    nparr = np.frombuffer(in_memory_file, np.uint8)
-    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-
-    if img is None: return jsonify({'error': 'Bad image'}), 400
-
     try:
-        # Preprocessing
+        # 1. Baca Gambar
+        file = request.files['file']
+        np_img = np.frombuffer(file.read(), np.uint8)
+        img = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
+        
+        if img is None:
+            return jsonify({'error': 'Invalid image format'}), 400
+
+        # 2. Preprocessing & Ekstraksi (Sama persis dengan Training)
         gray = preprocessor.to_grayscale_manual(img)
         kernel = preprocessor.gaussian_kernel_manual()
         blurred = preprocessor.convolution_manual(gray, kernel)
         cropped = preprocessor.crop_roi_manual(blurred)
         final_img = preprocessor.resize_padding_manual(cropped, target_size=64)
 
-        # Ekstraksi
         glcm = extractor.extract_glcm_features(final_img)
-        hog_feats = extractor.extract_hog_features(final_img, cell_size=8)
+        hog = extractor.extract_hog_features(final_img, cell_size=8)
         
-        prediction_text = "Model belum dilatih"
+        # 3. Prediksi
+        label = "Unknown"
+        confidence = 0.0
         
-        # Prediksi
-        if svm_model is not None:
-            features_vector = np.hstack([glcm, hog_feats]).reshape(1, -1)
+        if svm_model and scaler:
+            # Gabung fitur & Scaling
+            features = np.hstack([glcm, hog]).reshape(1, -1)
+            features = np.hstack([glcm, hog]).reshape(1, -1)
+            features = scaler.transform(features)
+            features = scaler.transform(features)
             
-            if scaler:
-                features_vector = scaler.transform(features_vector)
+            if pca:
+                features = pca.transform(features)
+
+            # Predict Class
+            pred_idx = int(svm_model.predict(features)[0])
             
-            pred_idx = svm_model.predict(features_vector)[0]
-            pred_idx = int(pred_idx)
+            # Predict Confidence (Jika support probability)
+            if hasattr(svm_model, "predict_proba"):
+                probs = svm_model.predict_proba(features)[0]
+                confidence = float(probs[pred_idx]) # 0.0 - 1.0
+            else:
+                confidence = 1.0 # Default jika manual SVM
             
             if 0 <= pred_idx < len(CATEGORIES):
-                prediction_text = CATEGORIES[pred_idx]
-                if hasattr(svm_model, "predict_proba"):
-                    probs = svm_model.predict_proba(features_vector)[0]
-                    confidence = probs[pred_idx] * 100
-                    prediction_text += f" ({confidence:.1f}%)"
-            else:
-                prediction_text = "Unknown"
+                label = CATEGORIES[pred_idx]
 
+        # 4. Kirim Respon JSON
         return jsonify({
             'status': 'success',
+            'label': label,
+            'confidence': confidence, # Frontend mengharapkan float 0-1
             'features': {
-                'glcm': {
-                    'contrast': float(glcm[0]),
-                    'energy': float(glcm[1]),
-                    'homogeneity': float(glcm[2]),
-                    'correlation': float(glcm[3])
-                },
-                'hog': {
-                    'total_features': len(hog_feats),
-                    'sample_values': [float(x) for x in hog_feats[:5]]
-                }
-            },
-            'prediction': prediction_text
+                'glcm_contrast': float(glcm[0]),
+                'hog_len': len(hog)
+            }
         })
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"[ERROR] {e}")
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
