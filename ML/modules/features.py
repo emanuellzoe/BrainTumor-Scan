@@ -51,6 +51,7 @@ class ManualFeatures:
         """
         [MANUAL GLCM 3] Menghitung 4 statistik dasar dari matriks GLCM.
         Rumus diambil dari buku teks Haralick.
+        MODIFIED: Returns features and the GLCM matrix for visualization.
         """
         P = self.compute_glcm_matrix(image)
         levels = P.shape[0]
@@ -84,7 +85,7 @@ class ManualFeatures:
                 if std > 0:
                     correlation += ((i - mean) * (j - mean) * val) / (std ** 2)
                     
-        return [contrast, energy, homogeneity, correlation]
+        return [contrast, energy, homogeneity, correlation], P
 
     # ==========================================
     # BAGIAN 2: HOG (Histogram of Oriented Gradients)
@@ -121,6 +122,7 @@ class ManualFeatures:
         """
         [MANUAL HOG 2] Membuat Histogram 9-bin dari Magnitude & Angle.
         Gambar dibagi jadi sel-sel kecil (misal 16x16 pixel).
+        MODIFIED: Returns HOG features and the magnitude map for visualization.
         """
         mag, ang = self.compute_gradients_manual(image)
         h, w = image.shape
@@ -158,7 +160,7 @@ class ManualFeatures:
                 hist_norm = hist / (np.linalg.norm(hist) + 1e-5)
                 hog_features.extend(hist_norm)
                 
-        return np.array(hog_features)
+        return np.array(hog_features), mag
 
     # ==========================================
     # BAGIAN 3: SPATIAL GRIDDING (Penggabungan)
