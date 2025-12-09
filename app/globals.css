@@ -509,6 +509,46 @@ body {
   box-shadow: 0 0.375rem 1rem rgba(116, 85, 69, 0.4);
 }
 
+.secondary-button {
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: var(--spacing-md) var(--spacing-2xl);
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #ff8a3d, #ff5b2a);
+  color: white;
+  font-weight: 700;
+  font-size: var(--font-size-base);
+  align-self: center;
+  box-shadow: 0 0.5rem 1.25rem rgba(255, 91, 42, 0.4);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.secondary-button::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.secondary-button:hover:not(:disabled) {
+  transform: translateY(-0.25rem);
+  box-shadow: 0 0.75rem 1.75rem rgba(255, 91, 42, 0.6);
+}
+
+.secondary-button:hover:not(:disabled)::before {
+  width: 300px;
+  height: 300px;
+}
+
 /* ===================================
    10. VISUALIZATION GRIDS
    =================================== */
@@ -611,7 +651,7 @@ body {
   overflow: hidden;
 }
 
-.prediction-card-standalone::before {
+/* .prediction-card-standalone::before {
   content: "";
   position: absolute;
   top: 0;
@@ -619,7 +659,7 @@ body {
   right: 0;
   height: 0.25rem;
   background: linear-gradient(90deg, #ff5b2a, #ff8a3d, #ffb347);
-}
+} */
 
 .section-title {
   margin: 0 0 var(--spacing-lg);
