@@ -57,10 +57,18 @@ class ManualMulticlassSVM:
 
     def predict(self, X):
         # Ambil skor tertinggi dari 4 model
+        pred_scores = self.decision_function(X)
+        return np.argmax(pred_scores, axis=1)
+
+    def decision_function(self, X):
+        """
+        Mengembalikan skor mentah (jarak ke hyperplane) untuk setiap kelas.
+        Penting untuk ROC-AUC.
+        """
         pred_scores = np.zeros((X.shape[0], self.n_classes))
         for idx, model in enumerate(self.models):
             pred_scores[:, idx] = np.dot(X, model.w) - model.b
-        return np.argmax(pred_scores, axis=1)
+        return pred_scores
 
     def save(self, filename):
         with open(filename, 'wb') as f:
