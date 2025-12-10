@@ -124,7 +124,7 @@ cd ML
 pip install -r requirements.txt
 
 # Jalankan server backend
-python ML/train.py
+python .\ML\api.py
 ```
 
 Backend akan berjalan pada **http://localhost:5000**
